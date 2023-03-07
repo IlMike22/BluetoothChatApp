@@ -2,7 +2,7 @@ package com.example.bluetoothchatapp.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bluetoothchatapp.domain.IBluetoothController
+import com.example.bluetoothchatapp.domain.chat.IBluetoothController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

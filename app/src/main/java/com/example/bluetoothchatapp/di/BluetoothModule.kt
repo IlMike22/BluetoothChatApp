@@ -1,8 +1,8 @@
 package com.example.bluetoothchatapp.di
 
 import android.content.Context
-import com.example.bluetoothchatapp.data.BluetoothController
-import com.example.bluetoothchatapp.domain.IBluetoothController
+import com.example.bluetoothchatapp.data.chat.BluetoothController
+import com.example.bluetoothchatapp.domain.chat.IBluetoothController
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

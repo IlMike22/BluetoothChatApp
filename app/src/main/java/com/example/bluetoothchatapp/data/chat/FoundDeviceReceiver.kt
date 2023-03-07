@@ -1,4 +1,4 @@
-package com.example.bluetoothchatapp.data
+package com.example.bluetoothchatapp.data.chat
 
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
