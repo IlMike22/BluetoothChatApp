@@ -2,6 +2,7 @@ package com.example.bluetoothchatapp.data.chat
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
@@ -13,8 +14,10 @@ import com.example.bluetoothchatapp.domain.chat.BluetoothDevice
 import com.example.bluetoothchatapp.domain.chat.BluetoothDeviceDomain
 import com.example.bluetoothchatapp.domain.chat.ConnectionResult
 import com.example.bluetoothchatapp.domain.chat.IBluetoothController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
@@ -42,6 +45,10 @@ class BluetoothController(
     override val pairedDevices: StateFlow<List<BluetoothDeviceDomain>>
         get() = _pairedDevices.asStateFlow()
 
+    private val _errors = MutableSharedFlow<String>()
+    override val errors: SharedFlow<String>
+        get() = _errors.asSharedFlow()
+
     private val foundDeviceReceiver = FoundDeviceReceiver { device ->
         _scannedDevices.update { devices ->
             val newDevice = device.toBluetoothDeviceDomain()
@@ -50,6 +57,13 @@ class BluetoothController(
     }
 
     private val bluetoothStateReceiver = BluetoothStateReceiver { isConnected, bluetoothDevice ->
+        if (bluetoothAdapter?.bondedDevices?.contains(bluetoothDevice) == true) {
+            _isConnected.update { isConnected }
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                _errors.emit("Can`t connect to a non-paired device.")
+            }
+        }
     }
 
     private var currentServerSocket: BluetoothServerSocket? = null
@@ -57,6 +71,14 @@ class BluetoothController(
 
     init {
         updatePairedDevices()
+        context.registerReceiver(
+            bluetoothStateReceiver,
+            IntentFilter().apply {
+                addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
+                addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_CONNECTED)
+                addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED)
+            }
+        )
     }
 
     override fun startDiscovery() {
@@ -148,6 +170,7 @@ class BluetoothController(
 
     override fun release() {
         context.unregisterReceiver(foundDeviceReceiver)
+        context.unregisterReceiver(bluetoothStateReceiver)
         closeConnection()
     }
 
